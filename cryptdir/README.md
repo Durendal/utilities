@@ -1,5 +1,5 @@
 ==============
-encryptdir.php
+Cryptdir
 ==============
 
 ## Setup:
