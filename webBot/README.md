@@ -6,7 +6,8 @@ webBot
 webBot.php aims to simplify the use of cURL with php. At the moment it only handles GET and POST HTTP requests but I may add more to it as time and interest permits. It should work with HTTP and SOCKS proxies, the default behaviour is to use HTTP, to enable SOCKS proxies you must either declare it as the second parameter when instantiating the bot as in the first example below, or you must set it as the third parameter using the setProxy() method.
 
 Donations Appreciated:
-BTC: 1GicRCkw8EigtNdFwfTR6cFxM7uA8nNwbd
+
+	BTC: 1GicRCkw8EigtNdFwfTR6cFxM7uA8nNwbd
 
 An example of using it with tor:
 
