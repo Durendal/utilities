@@ -3,9 +3,9 @@ webBot
 ======
 
 ## A web scraper written in PHP
-webBot.php aims to simplify the use of cURL with php. At the moment it only
-	handles GET and POST HTTP requests but I may add more to it as time and
-	interest permits. An example of using it with tor:
+webBot.php aims to simplify the use of cURL with php. At the moment it only handles GET and POST HTTP requests but I may add more to it as time and interest permits. It should work with HTTP and SOCKS proxies, the default behaviour is to use HTTP, to enable SOCKS proxies you must either declare it as the second parameter when instantiating the bot as in the first example below, or you must set it as the third parameter using the setProxy() method.
+
+An example of using it with tor:
 
 	$bot = new webBot("127.0.0.1:9050", "SOCKS");
 	$page = $bot->requestGET("http://zqktlwi4fecvo6ri.onion/wiki/index.php/Main_Page");
