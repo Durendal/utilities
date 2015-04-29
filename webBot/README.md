@@ -3,13 +3,43 @@ webBot
 ======
 
 ## A web scraper written in PHP
+webBot.php aims to simplify the use of cURL with php. At the moment it only
+	handles GET and POST HTTP requests but I may add more to it as time and
+	interest permits. An example of using it with tor:
+
+	$bot = new webBot("127.0.0.1:9050", "SOCKS");
+	$page = $bot->requestGET("http://zqktlwi4fecvo6ri.onion/wiki/index.php/Main_Page");
+	file_put_contents("index.html", $page);
+	// index.html contains the html of the page
+		
+if you then ran setProxy() with no parameters it would clear the proxy settings and the same request would fail:
+
+	$bot.setProxy();
+	$page = $bot->requestGET("http://zqktlwi4fecvo6ri.onion/wiki/index.php/Main_Page");
+	file_put_contents("index.html", $page);
+	// index.html is an empty file
+
+by default a random User-Agent is selected, this behaviour can be overridden by explicitly calling the setAgent() function and sending it the value you want:
+
+	$bot.setAgent("myBot user-agent");
+
+POST parameters should be sent as an array through generatePOSTData() which will ensure they are urlencoded and properly formatted:
+
+	$pdata = array("username" => "Durendal", "password" => "abc123", "submit" => "true");
+	$result = $bot.requestPOST("http://www.example.com/login.php", $bot.generatePOSTData($pdata));
+	if(strpos($result, "Login Successful"))
+		print "Successfully logged in\n";
+	else
+		print "Failed to log in\n";
+
+This class also comes packaged with a number of parsing routines written by Mike Schrenk for his book Webbots, Spiders and Screenscrapers that I have found extremely useful in the past. 
 
 Example:
 
 	require_once 'webBot.php';
 	$bot = new webBot();
 	$subreddit = ($argc > 1) ? $argv[1] : 'talesfromtechsupport';
-	$page = $bot->get_contents("http://www.reddit.com/r/$subreddit/.rss");
+	$page = $bot->requestGET("http://www.reddit.com/r/$subreddit/.rss");
 	$posts = $bot->parse_array($page, "<item>", "</item>");
 	$titles = array();
 	$links = array();
