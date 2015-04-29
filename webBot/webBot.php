@@ -224,7 +224,7 @@
 		*/
 		public function setCookie($cookie)
 		{
-			$this->cookie = $cookie;
+			$this->cookies = $cookie;
 		}
 
 		/*
@@ -233,7 +233,7 @@
 		*/
 		public function getCookie()
 		{
-			return $this->cookie;
+			return $this->cookies;
 		}
 
 		/*
