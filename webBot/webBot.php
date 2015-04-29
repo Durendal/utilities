@@ -1,12 +1,22 @@
 <?php
+	/*
+			File: webBot.php
+			Author: Durendal
+
+			webBot.php aims to simplify the use of cURL with php. At the moment it only
+			handles GET and POST HTTP requests but I may add more to it as time and
+			interest permits. 
+
+	*/
 
 	class webBot
 	{
 		private $agent;
-		private $timeout;
-		private $cook;
+		private $keepalive;
+		private $cookies;
 		private $curl;
 		private $proxy;
+		private $proxtype;
 		private $credentials;
 		private $EXCL;
 		private $INCL;
@@ -14,83 +24,314 @@
 		private $AFTER;
 	
 
-		public function __construct($proxy=null, $credentials=null)
+		public function __construct($proxy = null, $type = 'http', $credentials = null, $cookies = 'cookies.txt')
 		{
-			$this->proxy = $proxy;
-			$this->timeout = 30;
-			$this->agent = 'Mozilla/5.0 (iPhone; U; CPU iPhone OS 3_0 like Mac OS X; en-us'
-			.' AppleWebKit/528.18 (KHTML, like Gecko) Version/4.0 Mobile/7A341 Safari/528.16';
-			$this->cook = 'cookies.txt';
-			$this->curl = $this->setupCURL($this->proxy);
+			// Members for cURL
+			$this->setupCURL();
+			$this->setProxy($proxy, $credentials, $type);
+			$this->setCookies($cookies);
+			$this->keepalive = 300;
+			$this->setRandomAgent();
+			
+			// Members for parsing routines
 			$this->EXCL = true;
 			$this->INCL = false;
 			$this->BEFORE = true;
 			$this->AFTER = false;
-			$this->credentials = $credentials;
+			
+		}
+		/*
+					rebuildHandler()
+						rebuilds the cURL Handler for the next request
+		*/
+		public function rebuildHandler()
+		{
+			$this->ch = $this->setupCURL();
+			$this->setProxy($this->proxy, $this->credentials);
+			$this->setRandomAgent();
+		}
+		/*
+					setKeepAlive($keepalive)
+						sets the Keep-Alive value to $keepalive
+		*/
+		public function setKeepAlive($keepalive)
+		{
+			if($keepalive > 0)
+				$this->keepalive = $keepalive;
+		}
+		/*
+					getKeepAlive()
+						returns the current Keep-Alive value
+		*/
+		public function getKeepAlive()
+		{
+			return $this->keepalive;
+		}
+		/*
+					setAgent($agent)
+						sets the User-Agent to $agent
+		*/
+		public function setAgent($agent='curlBot')
+		{
+			$this->agent = $agent;
 		}
 
-		private function setupCURL($py)
+		/*
+					getAgent()
+						returns the currently set User-Agent
+		*/
+
+		public function getAgent()
 		{
-			$ck = $this->cook;
-			$creds = $this->credentials;
-			$ch = curl_init();
+			return $this->agent;
+		}
+
+		/*
+					setRandomAgent()
+						sets the useragent at random to one from the list below
+					
+					List of user-agents from: https://techblog.willshouse.com/2012/01/03/most-common-user-agents/
+		*/
+		public function setRandomAgent()
+		{
+			$agents = array("Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2272.118 Safari/537.36",
+							"Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.90 Safari/537.36",
+							"Mozilla/5.0 (Windows NT 6.1; WOW64; rv:37.0) Gecko/20100101 Firefox/37.0",
+							"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_3) AppleWebKit/600.5.17 (KHTML, like Gecko) Version/8.0.5 Safari/600.5.17",
+							"Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2272.118 Safari/537.36",
+							"Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2272.101 Safari/537.36",
+							"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2272.118 Safari/537.36",
+							"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_2) AppleWebKit/600.4.10 (KHTML, like Gecko) Version/8.0.4 Safari/600.4.10",
+							"Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.90 Safari/537.36",
+							"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.90 Safari/537.36",
+							"Mozilla/5.0 (Windows NT 6.1; WOW64; rv:36.0) Gecko/20100101 Firefox/36.0",
+							"Mozilla/5.0 (Windows NT 6.3; WOW64; rv:37.0) Gecko/20100101 Firefox/37.0",
+							"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2272.104 Safari/537.36",
+							"Mozilla/5.0 (Macintosh; Intel Mac OS X 10.10; rv:37.0) Gecko/20100101 Firefox/37.0",
+							"Mozilla/5.0 (Windows NT 6.1; WOW64; Trident/7.0; rv:11.0) like Gecko",
+							"Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2272.101 Safari/537.36",
+							"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2272.118 Safari/537.36",
+							"Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:37.0) Gecko/20100101 Firefox/37.0",
+							"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2272.118 Safari/537.36",
+							"Mozilla/5.0 (iPhone; CPU iPhone OS 8_3 like Mac OS X) AppleWebKit/600.1.4 (KHTML, like Gecko) Version/8.0 Mobile/12F70 Safari/600.1.4",
+							"Mozilla/5.0 (iPhone; CPU iPhone OS 8_2 like Mac OS X) AppleWebKit/600.1.4 (KHTML, like Gecko) Version/8.0 Mobile/12D508 Safari/600.1.4",
+							"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.90 Safari/537.36",
+							"Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2272.118 Safari/537.36",
+							"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2272.118 Safari/537.36",
+							"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_2) AppleWebKit/600.3.18 (KHTML, like Gecko) Version/8.0.3 Safari/600.3.18",
+							"Mozilla/5.0 (Windows NT 6.3; WOW64; rv:36.0) Gecko/20100101 Firefox/36.0",
+							"Mozilla/5.0 (Windows NT 6.3; WOW64; Trident/7.0; rv:11.0) like Gecko",
+							"Mozilla/5.0 (Windows NT 6.1; rv:37.0) Gecko/20100101 Firefox/37.0",
+							"Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.90 Safari/537.36",
+							"Mozilla/5.0 (Macintosh; Intel Mac OS X 10.9; rv:37.0) Gecko/20100101 Firefox/37.0",
+							"Mozilla/5.0 (Macintosh; Intel Mac OS X 10.10; rv:36.0) Gecko/20100101 Firefox/36.0",
+							"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.90 Safari/537.36",
+							"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.90 Safari/537.36",
+							"Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2272.101 Safari/537.36",
+							"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2272.101 Safari/537.36",
+							"Mozilla/5.0 (iPad; CPU OS 8_2 like Mac OS X) AppleWebKit/600.1.4 (KHTML, like Gecko) Version/8.0 Mobile/12D508 Safari/600.1.4",
+							"Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:36.0) Gecko/20100101 Firefox/36.0",
+							"Mozilla/5.0 (iPad; CPU OS 8_3 like Mac OS X) AppleWebKit/600.1.4 (KHTML, like Gecko) Version/8.0 Mobile/12F69 Safari/600.1.4",
+							"Mozilla/5.0 (Windows NT 6.1; Trident/7.0; rv:11.0) like Gecko",
+							"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2272.104 Safari/537.36",
+							"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Ubuntu Chromium/41.0.2272.76 Chrome/41.0.2272.76 Safari/537.36",
+							"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_5) AppleWebKit/600.4.10 (KHTML, like Gecko) Version/7.1.4 Safari/537.85.13",
+							"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2272.118 Safari/537.36",
+							"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_5) AppleWebKit/600.5.17 (KHTML, like Gecko) Version/7.1.5 Safari/537.85.14",
+							"Mozilla/5.0 (iPhone; CPU iPhone OS 7_1_2 like Mac OS X) AppleWebKit/537.51.2 (KHTML, like Gecko) Version/7.0 Mobile/11D257 Safari/9537.53",
+							"Mozilla/5.0 (Windows NT 6.1; rv:36.0) Gecko/20100101 Firefox/36.0",
+							"Mozilla/5.0 (Windows NT 5.1; rv:37.0) Gecko/20100101 Firefox/37.0",
+							"Mozilla/5.0 (Macintosh; Intel Mac OS X 10.9; rv:36.0) Gecko/20100101 Firefox/36.0",
+							"Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.1; WOW64; Trident/6.0)",
+							"Mozilla/5.0 (iPhone; CPU iPhone OS 8_1_3 like Mac OS X) AppleWebKit/600.1.4 (KHTML, like Gecko) Version/8.0 Mobile/12B466 Safari/600.1.4",
+							"Mozilla/5.0 (Windows NT 6.3; WOW64; Trident/7.0; Touch; rv:11.0) like Gecko",
+							"Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; WOW64; Trident/5.0)",
+							"Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2272.89 Safari/537.36",
+							"Mozilla/5.0 (Windows NT 6.2; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.90 Safari/537.36",
+							"Mozilla/5.0 (Windows NT 6.1; WOW64; rv:31.0) Gecko/20100101 Firefox/31.0",
+							"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_7_5) AppleWebKit/537.78.2 (KHTML, like Gecko) Version/6.1.6 Safari/537.78.2",
+							"Mozilla/5.0 (X11; Ubuntu; Linux i686; rv:37.0) Gecko/20100101 Firefox/37.0",
+							"Mozilla/5.0 (Windows NT 6.1; WOW64; rv:35.0) Gecko/20100101 Firefox/35.0",
+							"Mozilla/5.0 (Windows NT 6.2; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2272.118 Safari/537.36",
+							"Mozilla/5.0 (iPhone; CPU iPhone OS 8_1_2 like Mac OS X) AppleWebKit/600.1.4 (KHTML, like Gecko) Version/8.0 Mobile/12B440 Safari/600.1.4",
+							"Mozilla/5.0 (X11; Linux x86_64; rv:31.0) Gecko/20100101 Firefox/31.0",
+							"Mozilla/5.0 (X11; Linux x86_64; rv:37.0) Gecko/20100101 Firefox/37.0",
+							"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_2) AppleWebKit/600.3.18 (KHTML, like Gecko) Version/8.0.4 Safari/600.4.10",
+							"Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.90 Safari/537.36",
+							"Mozilla/5.0 (iPhone; CPU iPhone OS 8_1 like Mac OS X) AppleWebKit/600.1.4 (KHTML, like Gecko) Version/8.0 Mobile/12B411 Safari/600.1.4",
+							"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10) AppleWebKit/600.1.25 (KHTML, like Gecko) Version/8.0 Safari/600.1.25",
+							"Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.90 Safari/537.36",
+							"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2272.118 Safari/537.36",
+							"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_6_8) AppleWebKit/534.59.10 (KHTML, like Gecko) Version/5.1.9 Safari/534.59.10",
+							"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_5) AppleWebKit/600.3.18 (KHTML, like Gecko) Version/7.1.3 Safari/537.85.12",
+							"Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36",
+							"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_5) AppleWebKit/537.78.2 (KHTML, like Gecko) Version/7.0.6 Safari/537.78.2",
+							"Mozilla/5.0 (Windows NT 5.1; rv:36.0) Gecko/20100101 Firefox/36.0",
+							"Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2272.118 Safari/537.36 OPR/28.0.1750.51",
+							"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2272.89 Safari/537.36");
+			
+			$this->setAgent($agents[rand(0,count($agents))]);
+
+		}
+
+		/*
+				setProxy($py, $creds, $type)
+
+					will set the proxy using the specified credentials and type,
+					by default it assumes an HTTP proxy with no credentials. To 
+					use a SOCKS proxy simply pass the string 'SOCKS' as the third 
+					parameter. If no parameters are sent, it will remove any proxy
+					settings and begin routing in the clear.
+		*/
+		public function setProxy($py = null, $creds = null, $type = 'http')
+		{
+			$this->proxy = $py;
+			$this->credentials = $creds;
+			$this->proxtype = $type;
+
 			if($py)
 			{
-				curl_setopt($ch, CURLOPT_HTTPPROXYTUNNEL, 1);
-				curl_setopt($ch, CURLOPT_PROXY, $py);
-				if($creds)
-					curl_setopt($ch, CURLOPT_PROXYUSERPWD, $creds);
-				print("Using Proxy: $py\n");
+				// Check for SOCKS or HTTP Proxy
+				if(strtoupper($this->proxtype) == 'SOCKS')
+					curl_setopt($this->ch, CURLOPT_PROXYTYPE, 7);
+				else
+					curl_setopt($this->ch, CURLOPT_PROXYTYPE, CURLPROXY_HTTP);
+
+				curl_setopt($this->ch, CURLOPT_HTTPPROXYTUNNEL, 1);
+				curl_setopt($this->ch, CURLOPT_PROXY, $this->proxy);
+
+				if($this->credentials)
+					curl_setopt($this->ch, CURLOPT_PROXYUSERPWD, $this->credentials);
+
+				print("Using Proxy: {$this->proxy}\n");
 			}
+			// Disable Proxy Support if called with no parameters
+			else
+			{
+				curl_setopt($this->ch, CURLOPT_PROXYTYPE, null);
+				curl_setopt($this->ch, CURLOPT_HTTPPROXYTUNNEL, 0);
+				curl_setopt($this->ch, CURLOPT_PROXY, null);
+				curl_setopt($this->ch, CURLOPT_PROXYUSERPWD, null);
+			}
+
+		}
+
+		/*
+				getProxy()
+					returns an array with the currently set proxy, credentials, and its type.
+		*/
+		public function getProxy()
+		{
+			return array($this->proxy, $this->credentials);
+		}
+
+		/*
+				setCookie($cookie)
+					sets the cookie file to $cookie and rebuilds the curl handler.
+		*/
+		public function setCookie($cookie)
+		{
+			$this->cookie = $cookie;
+			$this->rebuildHandler();
+		}
+
+		/*
+				getCookie()
+					returns the current file where cookies are stored
+		*/
+		public function getCookie()
+		{
+			return $this->cookie;
+		}
+
+		/*
+				setupCURL()
+					Creates and returns a new generic cURL handler
+		*/
+		private function setupCURL()
+		{
+			
+			$ch = curl_init();
 			curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
 			curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
 			curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
 			curl_setopt($ch, CURLOPT_HEADER, 1);
-			curl_setopt($ch, CURLOPT_COOKIEJAR, $ck);
-			curl_setopt($ch, CURLOPT_COOKIEFILE, $ck);
+			curl_setopt($ch, CURLOPT_COOKIEJAR, $this->cookies);
+			curl_setopt($ch, CURLOPT_COOKIEFILE, $this->cookies);
 
 			return $ch;
 		}
 
-		public function get_contents($url, $ref='')
+		/*
+				requestGET($url, $ref)
+					makes a GET based HTTP Request to the url specified in $url using the referer specified in $ref
+					if no $ref is specified it will use the $url
+		*/
+
+		public function requestGET($url, $ref='')
 		{
 			if($ref == '')
 				$ref = $url;
-			$ch = $this->curl;
 			$hd = array("Connection: Keep-alive",
-						"Keep-alive: 300",
+						"Keep-alive: {$this->keepalive}",
 						"Expect:",
 						"Referer: $ref",
 						"User-Agent: {$this->agent}"
 						);
-			curl_setopt($ch, CURLOPT_URL, $url);
-			curl_setopt($ch, CURLOPT_POST, 0);
-			curl_setopt($ch, CURLOPT_HTTPHEADER, $hd);
-			$x = curl_exec($ch);
+			curl_setopt($this->ch, CURLOPT_URL, $url);
+			curl_setopt($this->ch, CURLOPT_POST, 0);
+			curl_setopt($this->ch, CURLOPT_HTTPHEADER, $hd);
+			$x = curl_exec($this->ch);
 
 			return $x;
 		}
 
-		public function post_contents($purl, $pdata, $ref='')
+
+		/*
+				requestGET($url, $pdata, $ref)
+					makes a POST based HTTP Request to the url specified in $url using the referer specified in $ref
+					and the parameters specified in $pdata. If no $ref is specified it will use the $url
+		*/
+
+		public function requestPOST($purl, $pdata, $ref='')
 		{
 			if($ref == '')
 				$ref = $purl;
-			$ch = $this->curl;
 			$hd = array("Connection: Keep-alive",
-						"Keep-alive: 300",
+						"Keep-alive: {$this->keepalive}",
 						"Expect:",
 						"Referer: $ref",
 						"User-Agent: {$this->agent}"
 						);
-			curl_setopt($ch, CURLOPT_URL, $purl);
-			curl_setopt($ch, CURLOPT_POST, 1);
-			curl_setopt($ch, CURLOPT_POSTFIELDS, $pdata);
-			curl_setopt($ch, CURLOPT_HTTPHEADER, $hd);
-			$x = curl_exec($ch);
-			curl_setopt($ch, CURLOPT_POST, 0);
+			curl_setopt($this->ch, CURLOPT_URL, $purl);
+			curl_setopt($this->ch, CURLOPT_POST, 1);
+			curl_setopt($this->ch, CURLOPT_POSTFIELDS, $pdata);
+			curl_setopt($this->ch, CURLOPT_HTTPHEADER, $hd);
+			
+			$x = curl_exec($this->ch);
+
+			curl_setopt($this->ch, CURLOPT_POST, 0);
 
 			return $x;
 		}
+
+		/*
+				generatePOSTData($data)
+					generates a urlencoded string from an associative array of POST parameters
+		*/
+		public function generatePOSTData($data)
+		{
+			$params = '';
+
+			foreach($data as $key => $val)
+				$params .= urlencode($key) . '=' . urlencode($val) . '&';
+			
+			return substr($params, 0, -1);
+		}
+
+		/*
+			Parsing subroutines adapted from Mike Schrenks LIB_PARSE.php in Webbots spiders and screenscrapers http://webbotsspidersscreenscrapers.com/
+		*/
 
 		public function split_string($string, $delineator, $desired, $type)
 	    {
@@ -137,8 +378,8 @@
 	        // Use Tidy library to 'clean' input
 	        $cleaned_html = tidy_html($tag);
 	        // Remove all line feeds from the string
-	        $cleaned_html = str_replace("\r", "", $cleaned_html);
-	        $cleaned_html = str_replace("\n", "", $cleaned_html);
+	        $cleaned_html = str_replace(array("\r\n", "\n", "\r"), "", $cleaned_html);
+	        
 	        // Use return_between() to find the properly quoted value for the attribute
 	        return return_between($cleaned_html, strtoupper($attribute)."=\"", "\"", $this->EXCL);
 	    }
