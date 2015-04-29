@@ -58,7 +58,7 @@
 					parameter. If no parameters are sent, it will remove any proxy
 					settings and begin routing in the clear.
 		*/
-		public function setProxy($py = null, $creds = null, $type = 'http')
+		public function setProxy($py = null, $creds = null, $type = 'HTTP')
 		{
 			$this->proxy = $py;
 			$this->credentials = $creds;
@@ -260,6 +260,7 @@
 						"Referer: $ref",
 						"User-Agent: {$this->agent}"
 						);
+			
 			curl_setopt($this->ch, CURLOPT_URL, $url);
 			curl_setopt($this->ch, CURLOPT_POST, 0);
 			curl_setopt($this->ch, CURLOPT_HTTPHEADER, $hd);
@@ -285,6 +286,7 @@
 						"Referer: $ref",
 						"User-Agent: {$this->agent}"
 						);
+			
 			curl_setopt($this->ch, CURLOPT_URL, $purl);
 			curl_setopt($this->ch, CURLOPT_POST, 1);
 			curl_setopt($this->ch, CURLOPT_POSTFIELDS, $pdata);
@@ -378,7 +380,7 @@
 	        return return_between($cleaned_html, strtoupper($attribute)."=\"", "\"", true);
 	    }
 
-		function remove($string, $open_tag, $close_tag)
+		public function remove($string, $open_tag, $close_tag)
 	    {
 		    # Get array of things that should be removed from the input string
 		    $remove_array = parse_array($string, $open_tag, $close_tag);
@@ -389,7 +391,7 @@
 		    
 		    return $string;
 	    }
-	    function tidy_html($input_string)
+	    public function tidy_html($input_string)
 	    {
 		    // Detect if Tidy is in configured
 		    if( function_exists('tidy_get_release') )
