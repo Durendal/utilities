@@ -49,7 +49,7 @@
 			return $this->keepalive;
 		}
 
-				/*
+		/*
 				setProxy($py, $creds, $type)
 
 					will set the proxy using the specified credentials and type,
