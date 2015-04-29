@@ -14,30 +14,20 @@
 		private $agent;
 		private $keepalive;
 		private $cookies;
-		private $curl;
+		private $ch;
 		private $proxy;
 		private $proxtype;
 		private $credentials;
-		private $EXCL;
-		private $INCL;
-		private $BEFORE;
-		private $AFTER;
-	
+			
 
 		public function __construct($proxy = null, $type = 'http', $credentials = null, $cookies = 'cookies.txt')
 		{
-			// Members for cURL
+			
+			$this->setCookie($cookies);
 			$this->setupCURL();
 			$this->setProxy($proxy, $credentials, $type);
-			$this->setCookies($cookies);
 			$this->keepalive = 300;
 			$this->setRandomAgent();
-			
-			// Members for parsing routines
-			$this->EXCL = true;
-			$this->INCL = false;
-			$this->BEFORE = true;
-			$this->AFTER = false;
 			
 		}
 		/*
@@ -46,8 +36,8 @@
 		*/
 		public function rebuildHandler()
 		{
-			$this->ch = $this->setupCURL();
-			$this->setProxy($this->proxy, $this->credentials);
+			$this->setupCURL();
+			$this->setProxy($this->proxy, $this->credentials, $this->proxtype);
 			$this->setRandomAgent();
 		}
 		/*
@@ -170,7 +160,7 @@
 							"Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2272.118 Safari/537.36 OPR/28.0.1750.51",
 							"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2272.89 Safari/537.36");
 			
-			$this->setAgent($agents[rand(0,count($agents))]);
+			$this->setAgent($agents[rand(0,count($agents)-1)]);
 
 		}
 
@@ -203,7 +193,7 @@
 				if($this->credentials)
 					curl_setopt($this->ch, CURLOPT_PROXYUSERPWD, $this->credentials);
 
-				print("Using Proxy: {$this->proxy}\n");
+				print("Using {$this->proxtype} Proxy: {$this->proxy}\n");
 			}
 			// Disable Proxy Support if called with no parameters
 			else
@@ -228,11 +218,13 @@
 		/*
 				setCookie($cookie)
 					sets the cookie file to $cookie and rebuilds the curl handler.
+					note that if you already have an instance of the curlHandler 
+					instantiated, you will need to rebuild it via rebuildHandler()
+					for this to take effect
 		*/
 		public function setCookie($cookie)
 		{
 			$this->cookie = $cookie;
-			$this->rebuildHandler();
 		}
 
 		/*
@@ -251,15 +243,13 @@
 		private function setupCURL()
 		{
 			
-			$ch = curl_init();
-			curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-			curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-			curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
-			curl_setopt($ch, CURLOPT_HEADER, 1);
-			curl_setopt($ch, CURLOPT_COOKIEJAR, $this->cookies);
-			curl_setopt($ch, CURLOPT_COOKIEFILE, $this->cookies);
-
-			return $ch;
+			$this->ch = curl_init();
+			curl_setopt($this->ch, CURLOPT_SSL_VERIFYPEER, false);
+			curl_setopt($this->ch, CURLOPT_RETURNTRANSFER, 1);
+			curl_setopt($this->ch, CURLOPT_FOLLOWLOCATION, 1);
+			curl_setopt($this->ch, CURLOPT_HEADER, 1);
+			curl_setopt($this->ch, CURLOPT_COOKIEJAR, $this->cookies);
+			curl_setopt($this->ch, CURLOPT_COOKIEFILE, $this->cookies);
 		}
 
 		/*
@@ -326,6 +316,7 @@
 			foreach($data as $key => $val)
 				$params .= urlencode($key) . '=' . urlencode($val) . '&';
 			
+			// trim trailing &
 			return substr($params, 0, -1);
 		}
 
@@ -338,22 +329,22 @@
 	        // Case insensitive parse, convert string and delineator to lower case
 	        $lc_str = strtolower($string);
 	        $marker = strtolower($delineator);
-	        // Return text $this->BEFORE the delineator
-	        if($desired == $this->BEFORE)
+	        // Return text true the delineator
+	        if($desired == true)
 	        {
-				if($type == $this->EXCL) // Return text ESCL of the delineator
+				if($type == true) // Return text ESCL of the delineator
 	    			$split_here = strpos($lc_str, $marker);
-				else // Return text $this->INCL of the delineator
+				else // Return text false of the delineator
 	    			$split_here = strpos($lc_str, $marker)+strlen($marker);
 
 				$parsed_string = substr($string, 0, $split_here);
 	        }
-	        // Return text $this->AFTER the delineator
+	        // Return text false the delineator
 	        else
 	        {
-				if($type==$this->EXCL) // Return text ESCL of the delineator
+				if($type==true) // Return text ESCL of the delineator
 	    			$split_here = strpos($lc_str, $marker) + strlen($marker);
-				else // Return text $this->INCL of the delineator
+				else // Return text false of the delineator
 	    			$split_here = strpos($lc_str, $marker) ;
 
 				$parsed_string = substr($string, $split_here, strlen($string));
@@ -363,8 +354,8 @@
 
 	    public function return_between($string, $start, $stop, $type)
 	    {
-	        $temp = $this->split_string($string, $start, $this->AFTER, $type);
-	        return $this->split_string($temp, $stop, $this->BEFORE, $type);
+	        $temp = $this->split_string($string, $start, false, $type);
+	        return $this->split_string($temp, $stop, true, $type);
 	    }
 
 	    public function parse_array($string, $beg_tag, $close_tag)
@@ -381,7 +372,7 @@
 	        $cleaned_html = str_replace(array("\r\n", "\n", "\r"), "", $cleaned_html);
 	        
 	        // Use return_between() to find the properly quoted value for the attribute
-	        return return_between($cleaned_html, strtoupper($attribute)."=\"", "\"", $this->EXCL);
+	        return return_between($cleaned_html, strtoupper($attribute)."=\"", "\"", true);
 	    }
 
 		function remove($string, $open_tag, $close_tag)
