@@ -17,7 +17,7 @@
 		private $ch;			// cURL Handler
 		private $proxy;			// Proxy Address
 		private $proxtype;		// Proxy Type
-		private $credentials; 	// Proxy Credentials
+		private $credentials;	// Proxy Credentials
 			
 
 		public function __construct($proxy = null, $type = 'HTTP', $credentials = null, $cookies = 'cookies.txt')
@@ -330,106 +330,106 @@
 		*/
 
 		public function split_string($string, $delineator, $desired, $type)
-	    {
-	        // Case insensitive parse, convert string and delineator to lower case
-	        $lc_str = strtolower($string);
-	        $marker = strtolower($delineator);
-	        // Return text true the delineator
-	        if($desired == true)
-	        {
+		{
+			// Case insensitive parse, convert string and delineator to lower case
+			$lc_str = strtolower($string);
+			$marker = strtolower($delineator);
+			// Return text true the delineator
+			if($desired == true)
+			{
 				if($type == true) // Return text ESCL of the delineator
-	    			$split_here = strpos($lc_str, $marker);
+					$split_here = strpos($lc_str, $marker);
 				else // Return text false of the delineator
-	    			$split_here = strpos($lc_str, $marker)+strlen($marker);
+					$split_here = strpos($lc_str, $marker)+strlen($marker);
 
 				$parsed_string = substr($string, 0, $split_here);
-	        }
-	        // Return text false the delineator
-	        else
-	        {
+			}
+			// Return text false the delineator
+			else
+			{
 				if($type==true) // Return text ESCL of the delineator
-	    			$split_here = strpos($lc_str, $marker) + strlen($marker);
+					$split_here = strpos($lc_str, $marker) + strlen($marker);
 				else // Return text false of the delineator
-	    			$split_here = strpos($lc_str, $marker) ;
+					$split_here = strpos($lc_str, $marker) ;
 
 				$parsed_string = substr($string, $split_here, strlen($string));
-	        }
-	        return $parsed_string;
-	    }
+			}
+			return $parsed_string;
+		}
 
-	    public function return_between($string, $start, $stop, $type)
-	    {
-	        $temp = $this->split_string($string, $start, false, $type);
-	        return $this->split_string($temp, $stop, true, $type);
-	    }
+		public function return_between($string, $start, $stop, $type)
+		{
+			$temp = $this->split_string($string, $start, false, $type);
+			return $this->split_string($temp, $stop, true, $type);
+		}
 
-	    public function parse_array($string, $beg_tag, $close_tag)
-	    {
-	        preg_match_all("($beg_tag(.*)$close_tag)siU", $string, $matching_data);
-	        return $matching_data[0];
-	    }
+		public function parse_array($string, $beg_tag, $close_tag)
+		{
+			preg_match_all("($beg_tag(.*)$close_tag)siU", $string, $matching_data);
+			return $matching_data[0];
+		}
 
-	    public function get_attribute($tag, $attribute)
-	    {
-	        // Use Tidy library to 'clean' input
-	        $cleaned_html = tidy_html($tag);
-	        // Remove all line feeds from the string
-	        $cleaned_html = str_replace(array("\r\n", "\n", "\r"), "", $cleaned_html);
-	        
-	        // Use return_between() to find the properly quoted value for the attribute
-	        return return_between($cleaned_html, strtoupper($attribute)."=\"", "\"", true);
-	    }
+		public function get_attribute($tag, $attribute)
+		{
+			// Use Tidy library to 'clean' input
+			$cleaned_html = tidy_html($tag);
+			// Remove all line feeds from the string
+			$cleaned_html = str_replace(array("\r\n", "\n", "\r"), "", $cleaned_html);
+			
+			// Use return_between() to find the properly quoted value for the attribute
+			return return_between($cleaned_html, strtoupper($attribute)."=\"", "\"", true);
+		}
 
 		public function remove($string, $open_tag, $close_tag)
-	    {
-		    # Get array of things that should be removed from the input string
-		    $remove_array = parse_array($string, $open_tag, $close_tag);
-		    
-		    # Remove each occurrence of each array element from string;
-		    for($xx=0; $xx<count($remove_array); $xx++)
-		        $string = str_replace($remove_array, "", $string);
-		    
-		    return $string;
-	    }
-	    public function tidy_html($input_string)
-	    {
-		    // Detect if Tidy is in configured
-		    if( function_exists('tidy_get_release') )
-		    {
-		        # Tidy for PHP version 4
-		        if(substr(phpversion(), 0, 1) == 4)
-		        {
-		            tidy_setopt('uppercase-attributes', TRUE);
-		            tidy_setopt('wrap', 800);
-		            tidy_parse_string($input_string);            
-		            $cleaned_html = tidy_get_output();  
-		        }
-		        # Tidy for PHP version 5
-		        if(substr(phpversion(), 0, 1) == 5)
-		        {
-		            $config = array(
-		                           'uppercase-attributes' => true,
-		                           'wrap'                 => 800);
-		            $tidy = new tidy;
-		            $tidy->parseString($input_string, $config, 'utf8');
-		            $tidy->cleanRepair();
-		            $cleaned_html  = tidy_get_output($tidy);  
-		        }
-		    }
-		    else
-		    {
-		        # Tidy not configured for this computer
-		        $cleaned_html = $input_string;
-		    }
-		    return $cleaned_html;
-	    }
+		{
+			# Get array of things that should be removed from the input string
+			$remove_array = parse_array($string, $open_tag, $close_tag);
+			
+			# Remove each occurrence of each array element from string;
+			for($xx=0; $xx<count($remove_array); $xx++)
+				$string = str_replace($remove_array, "", $string);
+			
+			return $string;
+		}
+		public function tidy_html($input_string)
+		{
+			// Detect if Tidy is in configured
+			if( function_exists('tidy_get_release') )
+			{
+				# Tidy for PHP version 4
+				if(substr(phpversion(), 0, 1) == 4)
+				{
+					tidy_setopt('uppercase-attributes', TRUE);
+					tidy_setopt('wrap', 800);
+					tidy_parse_string($input_string);			
+					$cleaned_html = tidy_get_output();  
+				}
+				# Tidy for PHP version 5
+				if(substr(phpversion(), 0, 1) == 5)
+				{
+					$config = array(
+								   'uppercase-attributes' => true,
+								   'wrap'				 => 800);
+					$tidy = new tidy;
+					$tidy->parseString($input_string, $config, 'utf8');
+					$tidy->cleanRepair();
+					$cleaned_html  = tidy_get_output($tidy);  
+				}
+			}
+			else
+			{
+				# Tidy not configured for this computer
+				$cleaned_html = $input_string;
+			}
+			return $cleaned_html;
+		}
 
-	    public function validateURL($url)
-	    {    
-	        $pattern = '/^(([\w]+:)?\/\/)?(([\d\w]|%[a-fA-f\d]{2,2})+(:([\d\w]|%[a-fA-f\d]{2,2})+)?@)?([\d\w]'
-	        .'[-\d\w]{0,253}[\d\w]\.)+[\w]{2,4}(:[\d]+)?(\/([-+_~.\d\w]|%[a-fA-f\d]{2,2})*)*(\?(&?([-+_~.\d\w]'
-	        .'|%[a-fA-f\d]{2,2})=?)*)?(#([-+_~.\d\w]|%[a-fA-f\d]{2,2})*)?$/';
-	        return preg_match($pattern, $url);
-	    }
+		public function validateURL($url)
+		{	
+			$pattern = '/^(([\w]+:)?\/\/)?(([\d\w]|%[a-fA-f\d]{2,2})+(:([\d\w]|%[a-fA-f\d]{2,2})+)?@)?([\d\w]'
+			.'[-\d\w]{0,253}[\d\w]\.)+[\w]{2,4}(:[\d]+)?(\/([-+_~.\d\w]|%[a-fA-f\d]{2,2})*)*(\?(&?([-+_~.\d\w]'
+			.'|%[a-fA-f\d]{2,2})=?)*)?(#([-+_~.\d\w]|%[a-fA-f\d]{2,2})*)?$/';
+			return preg_match($pattern, $url);
+		}
 
 	}
