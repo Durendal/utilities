@@ -11,16 +11,16 @@
 
 	class webBot
 	{
-		private $agent;
-		private $keepalive;
-		private $cookies;
-		private $ch;
-		private $proxy;
-		private $proxtype;
-		private $credentials;
+		private $agent;			// User-Agent
+		private $keepalive;		// KeepAlive value
+		private $cookies;		// Cookie File
+		private $ch;			// cURL Handler
+		private $proxy;			// Proxy Address
+		private $proxtype;		// Proxy Type
+		private $credentials; 	// Proxy Credentials
 			
 
-		public function __construct($proxy = null, $type = 'http', $credentials = null, $cookies = 'cookies.txt')
+		public function __construct($proxy = null, $type = 'HTTP', $credentials = null, $cookies = 'cookies.txt')
 		{
 			
 			$this->setCookie($cookies);
@@ -30,16 +30,7 @@
 			$this->setRandomAgent();
 			
 		}
-		/*
-					rebuildHandler()
-						rebuilds the cURL Handler for the next request
-		*/
-		public function rebuildHandler()
-		{
-			$this->setupCURL();
-			$this->setProxy($this->proxy, $this->credentials, $this->proxtype);
-			$this->setRandomAgent();
-		}
+
 		/*
 					setKeepAlive($keepalive)
 						sets the Keep-Alive value to $keepalive
@@ -57,6 +48,79 @@
 		{
 			return $this->keepalive;
 		}
+
+				/*
+				setProxy($py, $creds, $type)
+
+					will set the proxy using the specified credentials and type,
+					by default it assumes an HTTP proxy with no credentials. To 
+					use a SOCKS proxy simply pass the string 'SOCKS' as the third 
+					parameter. If no parameters are sent, it will remove any proxy
+					settings and begin routing in the clear.
+		*/
+		public function setProxy($py = null, $creds = null, $type = 'http')
+		{
+			$this->proxy = $py;
+			$this->credentials = $creds;
+			$this->proxtype = $type;
+
+			if($py)
+			{
+				// Check for SOCKS or HTTP Proxy
+				if(strtoupper($this->proxtype) == 'SOCKS')
+					curl_setopt($this->ch, CURLOPT_PROXYTYPE, 7);
+				else
+					curl_setopt($this->ch, CURLOPT_PROXYTYPE, CURLPROXY_HTTP);
+
+				curl_setopt($this->ch, CURLOPT_HTTPPROXYTUNNEL, 1);
+				curl_setopt($this->ch, CURLOPT_PROXY, $this->proxy);
+
+				if($this->credentials)
+					curl_setopt($this->ch, CURLOPT_PROXYUSERPWD, $this->credentials);
+
+				print("Using {$this->proxtype} Proxy: {$this->proxy}\n");
+			}
+			// Disable Proxy Support if called with no parameters
+			else
+			{
+				curl_setopt($this->ch, CURLOPT_PROXYTYPE, null);
+				curl_setopt($this->ch, CURLOPT_HTTPPROXYTUNNEL, 0);
+				curl_setopt($this->ch, CURLOPT_PROXY, null);
+				curl_setopt($this->ch, CURLOPT_PROXYUSERPWD, null);
+			}
+
+		}
+
+		/*
+				getProxy()
+					returns an array with the currently set proxy, credentials, and its type.
+		*/
+		public function getProxy()
+		{
+			return array('proxy' => $this->proxy, 'credentials' => $this->credentials, 'type' => $this->proxtype);
+		}
+
+		/*
+				setCookie($cookie)
+					sets the cookie file to $cookie and rebuilds the curl handler.
+					note that if you already have an instance of the curlHandler 
+					instantiated, you will need to rebuild it via rebuildHandler()
+					for this to take effect
+		*/
+		public function setCookie($cookie)
+		{
+			$this->cookies = $cookie;
+		}
+
+		/*
+				getCookie()
+					returns the current file where cookies are stored
+		*/
+		public function getCookie()
+		{
+			return $this->cookies;
+		}
+
 		/*
 					setAgent($agent)
 						sets the User-Agent to $agent
@@ -165,78 +229,6 @@
 		}
 
 		/*
-				setProxy($py, $creds, $type)
-
-					will set the proxy using the specified credentials and type,
-					by default it assumes an HTTP proxy with no credentials. To 
-					use a SOCKS proxy simply pass the string 'SOCKS' as the third 
-					parameter. If no parameters are sent, it will remove any proxy
-					settings and begin routing in the clear.
-		*/
-		public function setProxy($py = null, $creds = null, $type = 'http')
-		{
-			$this->proxy = $py;
-			$this->credentials = $creds;
-			$this->proxtype = $type;
-
-			if($py)
-			{
-				// Check for SOCKS or HTTP Proxy
-				if(strtoupper($this->proxtype) == 'SOCKS')
-					curl_setopt($this->ch, CURLOPT_PROXYTYPE, 7);
-				else
-					curl_setopt($this->ch, CURLOPT_PROXYTYPE, CURLPROXY_HTTP);
-
-				curl_setopt($this->ch, CURLOPT_HTTPPROXYTUNNEL, 1);
-				curl_setopt($this->ch, CURLOPT_PROXY, $this->proxy);
-
-				if($this->credentials)
-					curl_setopt($this->ch, CURLOPT_PROXYUSERPWD, $this->credentials);
-
-				print("Using {$this->proxtype} Proxy: {$this->proxy}\n");
-			}
-			// Disable Proxy Support if called with no parameters
-			else
-			{
-				curl_setopt($this->ch, CURLOPT_PROXYTYPE, null);
-				curl_setopt($this->ch, CURLOPT_HTTPPROXYTUNNEL, 0);
-				curl_setopt($this->ch, CURLOPT_PROXY, null);
-				curl_setopt($this->ch, CURLOPT_PROXYUSERPWD, null);
-			}
-
-		}
-
-		/*
-				getProxy()
-					returns an array with the currently set proxy, credentials, and its type.
-		*/
-		public function getProxy()
-		{
-			return array('proxy' => $this->proxy, 'credentials' => $this->credentials, 'type' => $this->proxtype);
-		}
-
-		/*
-				setCookie($cookie)
-					sets the cookie file to $cookie and rebuilds the curl handler.
-					note that if you already have an instance of the curlHandler 
-					instantiated, you will need to rebuild it via rebuildHandler()
-					for this to take effect
-		*/
-		public function setCookie($cookie)
-		{
-			$this->cookies = $cookie;
-		}
-
-		/*
-				getCookie()
-					returns the current file where cookies are stored
-		*/
-		public function getCookie()
-		{
-			return $this->cookies;
-		}
-
-		/*
 				setupCURL()
 					Creates and returns a new generic cURL handler
 		*/
@@ -321,6 +313,17 @@
 		}
 
 		/*
+					rebuildHandler()
+						rebuilds the cURL Handler for the next request
+		*/
+		public function rebuildHandler()
+		{
+			$this->setupCURL();
+			$this->setProxy($this->proxy, $this->credentials, $this->proxtype);
+			$this->setRandomAgent();
+		}
+
+		/*
 			Parsing subroutines adapted from Mike Schrenks LIB_PARSE.php in Webbots spiders and screenscrapers http://webbotsspidersscreenscrapers.com/
 		*/
 
@@ -390,18 +393,18 @@
 	    {
 		    // Detect if Tidy is in configured
 		    if( function_exists('tidy_get_release') )
-		        {
+		    {
 		        # Tidy for PHP version 4
 		        if(substr(phpversion(), 0, 1) == 4)
-		            {
+		        {
 		            tidy_setopt('uppercase-attributes', TRUE);
 		            tidy_setopt('wrap', 800);
 		            tidy_parse_string($input_string);            
 		            $cleaned_html = tidy_get_output();  
-		            }
+		        }
 		        # Tidy for PHP version 5
 		        if(substr(phpversion(), 0, 1) == 5)
-		            {
+		        {
 		            $config = array(
 		                           'uppercase-attributes' => true,
 		                           'wrap'                 => 800);
@@ -409,13 +412,13 @@
 		            $tidy->parseString($input_string, $config, 'utf8');
 		            $tidy->cleanRepair();
 		            $cleaned_html  = tidy_get_output($tidy);  
-		            }
 		        }
+		    }
 		    else
-		        {
+		    {
 		        # Tidy not configured for this computer
 		        $cleaned_html = $input_string;
-		        }
+		    }
 		    return $cleaned_html;
 	    }
 
