@@ -212,7 +212,7 @@
 		*/
 		public function getProxy()
 		{
-			return array($this->proxy, $this->credentials);
+			return array('proxy' => $this->proxy, 'credentials' => $this->credentials, 'type' => $this->proxtype);
 		}
 
 		/*

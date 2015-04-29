@@ -20,9 +20,10 @@
 		print "Title #$ii: ".$titles[$i]."\n";
 		print "Link #$ii: ".$links[$i]."\n";
 	}
-	
+	print "\n\n";
 	$bot->setProxy("127.0.0.1:9050", null, "SOCKS");
 	print "User-Agent: " . $bot->getAgent() . "\n";
+	var_dump($bot->getProxy());
 	print "Scraping hidden index...\n";
 	$page = $bot->requestGET("http://zqktlwi4fecvo6ri.onion/wiki/index.php/Main_Page");
 	print "Done!\n";
