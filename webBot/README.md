@@ -27,7 +27,7 @@ POST parameters should be sent as an array through generatePOSTData() which will
 
 	$pdata = array("username" => "Durendal", "password" => "abc123", "submit" => "true");
 	$result = $bot.requestPOST("http://www.example.com/login.php", $bot.generatePOSTData($pdata));
-	if(strpos($result, "Login Successful"))
+	if(stristr($result, "Login Successful"))
 		print "Successfully logged in\n";
 	else
 		print "Failed to log in\n";
