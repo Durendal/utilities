@@ -298,7 +298,7 @@
 				"Keep-alive: {$this->keepalive}",
 				"Expect:",
 				"Referer: $ref",
-				"User-Agent: {$this->agent}"
+				    "User-Agent: {$this->agent}"
 				);
 			
 			curl_setopt($this->ch, CURLOPT_URL, $purl);
