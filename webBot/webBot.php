@@ -32,8 +32,9 @@
 		}
 
 		/*
-					setKeepAlive($keepalive)
-						sets the Keep-Alive value to $keepalive
+			setKeepAlive($keepalive)
+				
+				sets the Keep-Alive value to $keepalive
 		*/
 		public function setKeepAlive($keepalive)
 		{
@@ -41,8 +42,9 @@
 				$this->keepalive = $keepalive;
 		}
 		/*
-					getKeepAlive()
-						returns the current Keep-Alive value
+			getKeepAlive()
+		
+				returns the current Keep-Alive value
 		*/
 		public function getKeepAlive()
 		{
@@ -50,13 +52,13 @@
 		}
 
 		/*
-				setProxy($py, $creds, $type)
+			setProxy($py, $creds, $type)
 
-					will set the proxy using the specified credentials and type,
-					by default it assumes an HTTP proxy with no credentials. To 
-					use a SOCKS proxy simply pass the string 'SOCKS' as the third 
-					parameter. If no parameters are sent, it will remove any proxy
-					settings and begin routing in the clear.
+				will set the proxy using the specified credentials and type,
+				by default it assumes an HTTP proxy with no credentials. To 
+				use a SOCKS proxy simply pass the string 'SOCKS' as the third 
+				parameter. If no parameters are sent, it will remove any proxy
+				settings and begin routing in the clear.
 		*/
 		public function setProxy($py = null, $creds = null, $type = 'HTTP')
 		{
@@ -92,8 +94,9 @@
 		}
 
 		/*
-				getProxy()
-					returns an array with the currently set proxy, credentials, and its type.
+			getProxy()
+			
+				returns an array with the currently set proxy, credentials, and its type.
 		*/
 		public function getProxy()
 		{
@@ -101,11 +104,12 @@
 		}
 
 		/*
-				setCookie($cookie)
-					sets the cookie file to $cookie and rebuilds the curl handler.
-					note that if you already have an instance of the curlHandler 
-					instantiated, you will need to rebuild it via rebuildHandler()
-					for this to take effect
+			setCookie($cookie)
+			
+				sets the cookie file to $cookie and rebuilds the curl handler.
+				note that if you already have an instance of the curlHandler 
+				instantiated, you will need to rebuild it via rebuildHandler()
+				for this to take effect
 		*/
 		public function setCookie($cookie)
 		{
@@ -113,8 +117,9 @@
 		}
 
 		/*
-				getCookie()
-					returns the current file where cookies are stored
+			getCookie()
+			
+				returns the current file where cookies are stored
 		*/
 		public function getCookie()
 		{
@@ -122,8 +127,9 @@
 		}
 
 		/*
-					setAgent($agent)
-						sets the User-Agent to $agent
+			setAgent($agent)
+			
+				sets the User-Agent to $agent
 		*/
 		public function setAgent($agent='curlBot')
 		{
@@ -131,8 +137,9 @@
 		}
 
 		/*
-					getAgent()
-						returns the currently set User-Agent
+			getAgent()
+			
+				returns the currently set User-Agent
 		*/
 
 		public function getAgent()
@@ -141,10 +148,11 @@
 		}
 
 		/*
-					setRandomAgent()
-						sets the useragent at random to one from the list below
+			setRandomAgent()
+			
+				sets the useragent at random to one from the list below
 					
-					List of user-agents from: https://techblog.willshouse.com/2012/01/03/most-common-user-agents/
+			List of user-agents from: https://techblog.willshouse.com/2012/01/03/most-common-user-agents/
 		*/
 		public function setRandomAgent()
 		{
@@ -229,8 +237,9 @@
 		}
 
 		/*
-				setupCURL()
-					Creates and returns a new generic cURL handler
+			setupCURL()
+			
+				Creates and returns a new generic cURL handler
 		*/
 		private function setupCURL()
 		{
@@ -245,9 +254,10 @@
 		}
 
 		/*
-				requestGET($url, $ref)
-					makes a GET based HTTP Request to the url specified in $url using the referer specified in $ref
-					if no $ref is specified it will use the $url
+			requestGET($url, $ref)
+			
+				makes a GET based HTTP Request to the url specified in $url using the referer specified in $ref
+				if no $ref is specified it will use the $url
 		*/
 
 		public function requestGET($url, $ref='')
@@ -271,9 +281,10 @@
 
 
 		/*
-				requestGET($url, $pdata, $ref)
-					makes a POST based HTTP Request to the url specified in $url using the referer specified in $ref
-					and the parameters specified in $pdata. If no $ref is specified it will use the $url
+			requestGET($url, $pdata, $ref)
+			
+				makes a POST based HTTP Request to the url specified in $url using the referer specified in $ref
+				and the parameters specified in $pdata. If no $ref is specified it will use the $url
 		*/
 
 		public function requestPOST($purl, $pdata, $ref='')
@@ -300,8 +311,9 @@
 		}
 
 		/*
-				generatePOSTData($data)
-					generates a urlencoded string from an associative array of POST parameters
+			generatePOSTData($data)
+			
+				generates a urlencoded string from an associative array of POST parameters
 		*/
 		public function generatePOSTData($data)
 		{
@@ -315,8 +327,9 @@
 		}
 
 		/*
-					rebuildHandler()
-						rebuilds the cURL Handler for the next request
+			rebuildHandler()
+			
+				rebuilds the cURL Handler for the next request
 		*/
 		public function rebuildHandler()
 		{
