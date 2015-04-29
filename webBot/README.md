@@ -30,7 +30,7 @@ by default a random User-Agent is selected, this behaviour can be overridden by 
 POST parameters should be sent as an array through generatePOSTData() which will ensure they are urlencoded and properly formatted:
 
 	$pdata = array("username" => "Durendal", "password" => "abc&123", "submit" => "true");
-	$result = $bot->requestPOST("http://www.example.com/login.php", $bot.generatePOSTData($pdata));
+	$result = $bot->requestPOST("http://www.example.com/login.php", $bot->generatePOSTData($pdata));
 	if(stristr($result, "Login Successful"))
 		print "Successfully logged in\n";
 	else
