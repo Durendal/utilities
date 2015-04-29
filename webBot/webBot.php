@@ -268,11 +268,11 @@
 			if($ref == '')
 				$ref = $url;
 			$hd = array("Connection: Keep-alive",
-						"Keep-alive: {$this->keepalive}",
-						"Expect:",
-						"Referer: $ref",
-						"User-Agent: {$this->agent}"
-						);
+				"Keep-alive: {$this->keepalive}",
+				"Expect:",
+				"Referer: $ref",
+				"User-Agent: {$this->agent}"
+				);
 			
 			curl_setopt($this->ch, CURLOPT_URL, $url);
 			curl_setopt($this->ch, CURLOPT_POST, 0);
@@ -295,11 +295,11 @@
 			if($ref == '')
 				$ref = $purl;
 			$hd = array("Connection: Keep-alive",
-						"Keep-alive: {$this->keepalive}",
-						"Expect:",
-						"Referer: $ref",
-						"User-Agent: {$this->agent}"
-						);
+				"Keep-alive: {$this->keepalive}",
+				"Expect:",
+				"Referer: $ref",
+				"User-Agent: {$this->agent}"
+				);
 			
 			curl_setopt($this->ch, CURLOPT_URL, $purl);
 			curl_setopt($this->ch, CURLOPT_POST, 1);
