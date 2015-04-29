@@ -14,19 +14,19 @@ An example of using it with tor:
 		
 if you then ran setProxy() with no parameters it would clear the proxy settings and the same request would fail:
 
-	$bot.setProxy();
+	$bot->setProxy();
 	$page = $bot->requestGET("http://zqktlwi4fecvo6ri.onion/wiki/index.php/Main_Page");
 	file_put_contents("index.html", $page);
 	// index.html is an empty file
 
 by default a random User-Agent is selected, this behaviour can be overridden by explicitly calling the setAgent() function and sending it the value you want:
 
-	$bot.setAgent("myBot user-agent");
+	$bot->setAgent("myBot user-agent");
 
 POST parameters should be sent as an array through generatePOSTData() which will ensure they are urlencoded and properly formatted:
 
 	$pdata = array("username" => "Durendal", "password" => "abc123", "submit" => "true");
-	$result = $bot.requestPOST("http://www.example.com/login.php", $bot.generatePOSTData($pdata));
+	$result = $bot->requestPOST("http://www.example.com/login.php", $bot.generatePOSTData($pdata));
 	if(stristr($result, "Login Successful"))
 		print "Successfully logged in\n";
 	else
