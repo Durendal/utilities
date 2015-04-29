@@ -76,15 +76,18 @@
 
 				curl_setopt($this->ch, CURLOPT_HTTPPROXYTUNNEL, 1);
 				curl_setopt($this->ch, CURLOPT_PROXY, $this->proxy);
-
+				print "Using {$this->proxtype} Proxy: {$this->proxy} ";
 				if($this->credentials)
+				{
+					print "Credentials: {$this->credentials}";
 					curl_setopt($this->ch, CURLOPT_PROXYUSERPWD, $this->credentials);
-
-				print("Using {$this->proxtype} Proxy: {$this->proxy}\n");
+				}
+				print "\n";
 			}
 			// Disable Proxy Support if called with no parameters
 			else
 			{
+				print "Disabling Proxy.\n";
 				curl_setopt($this->ch, CURLOPT_PROXYTYPE, null);
 				curl_setopt($this->ch, CURLOPT_HTTPPROXYTUNNEL, 0);
 				curl_setopt($this->ch, CURLOPT_PROXY, null);
