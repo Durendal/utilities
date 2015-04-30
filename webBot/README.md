@@ -63,7 +63,6 @@ code written by Mike Schrenk in his book 'Webbots spiders and Screenscrapers'
 
 ===============
 ## curl_multi_*
-===============
 
 This class is able to leverage the curl_multi_* functions to make multiple requests at once in batch mode. You can use a proxy with this function the same as you would with any other request, however at this time there is no way to specify a different proxy for each request. This may change in the future if I get the time. Send an array of arrays as the sole parameter, each array should have at least one element: the URL. If the request is a POST request place a second value inside the array that is an array of POST parameters. You can mix and match POST and GET requests, it will determine which is which at execution time.
 
