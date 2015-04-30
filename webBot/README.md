@@ -60,3 +60,23 @@ This script takes an optional parameter of a subreddit name the default is 'tale
 It will scrape the RSS feed and post the front page of posts. This should illustrate
 the basic principles of using the bot. All parsing methods were adapted from original
 code written by Mike Schrenk in his book 'Webbots spiders and Screenscrapers' 
+
+===============
+## curl_multi_*
+===============
+
+This class is able to leverage the curl_multi_* functions to make multiple requests at once in batch mode. You can use a proxy with this function the same as you would with any other request, however at this time there is no way to specify a different proxy for each request. This may change in the future if I get the time. Send an array of arrays as the sole parameter, each array should have at least one element: the URL. If the request is a POST request place a second value inside the array that is an array of POST parameters. You can mix and match POST and GET requests, it will determine which is which at execution time.
+
+Example:
+
+	$bot = new webBot("127.0.0.1:9050", "SOCKS");
+	$creds = array("username" => "Durendal", "password" => "abc&123", "submit" => "true");
+	$sites = array(array("http://www.google.com"), array("http://www.bing.com"), array("http://www.cnn.com"), array("http://zqktlwi4fecvo6ri.onion"), array("http://www.example.com/login.php", $creds));
+	$results = $bot->multi_thread_request($sites);
+	
+	foreach($results as $key => $page)
+	{
+		$key = str_replace(array("http://", "https://"), "", $key);
+		print "Len: " . strlen($page) . "\n";
+		file_put_contents("$key.html", $page);
+	}
