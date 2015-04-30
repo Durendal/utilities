@@ -9,6 +9,9 @@ Donations Appreciated:
 
 	BTC: 1GicRCkw8EigtNdFwfTR6cFxM7uA8nNwbd
 
+======
+## Proxies
+
 An example of using it with tor:
 
 	$bot = new webBot("127.0.0.1:9050", "SOCKS");
@@ -23,7 +26,10 @@ if you then ran setProxy() with no parameters it would clear the proxy settings 
 	file_put_contents("index.html", $page);
 	// index.html is an empty file
 
-by default a random User-Agent is selected, this behaviour can be overridden by explicitly calling the setAgent() function and sending it the value you want:
+===========
+## Headers
+
+By default a random User-Agent is selected, this behaviour can be overridden by explicitly calling the setAgent() function and sending it the value you want:
 
 	$bot->setAgent("myBot user-agent");
 
@@ -37,6 +43,9 @@ POST parameters should be sent as an array through generatePOSTData() which will
 		print "Failed to log in\n";
 
 This class also comes packaged with a number of parsing routines written by Mike Schrenk for his book Webbots, Spiders and Screenscrapers that I have found extremely useful in the past. 
+
+===========
+## Parsing
 
 Example:
 
