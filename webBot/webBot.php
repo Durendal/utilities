@@ -11,8 +11,6 @@
 
 	class webBot
 	{
-		private $agent;			// User-Agent
-		private $keepalive;		// KeepAlive value
 		private $cookies;		// Cookie File
 		private $ch;			// cURL Handler
 		private $proxy;			// Proxy Address
@@ -20,6 +18,7 @@
 		private $credentials;	// Proxy Credentials
 		private $urls;			// Stack of URLs
 		private $verbose;		// Verbose output from class
+		private $headers;		// HTTP Headers
 			
 
 		public function __construct($proxy = null, $type = 'HTTP', $credentials = null, $cookies = 'cookies.txt')
@@ -28,33 +27,96 @@
 			$this->setCookie($cookies);
 			$this->ch = $this->setupCURL();
 			$this->ch = $this->setProxy($proxy, $type, $credentials);
-			$this->keepalive = 300;
-			$this->setRandomAgent();
 			$this->urls = array();
 			$verbose = true;
+			$this->headers = $this->defaultHeaders();
 			
 		}
 
 		/*
-			setKeepAlive($keepalive)
-				
-				sets the Keep-Alive value to $keepalive
+			setVerbose($mode)
+
+				turns on and off class verbosity. It can take a boolean value directly
+				or if called without any parameters, it will simply invert its current value.
 		*/
-		public function setKeepAlive($keepalive)
+
+		public function setVerbose($mode = null)
 		{
-			if($keepalive > 0)
-				$this->keepalive = $keepalive;
+			if($mode)
+				$this->verbose = $mode;
+			else
+				$this->verbose = !$this->verbose;
 		}
 
 		/*
-			getKeepAlive()
-		
-				returns the current Keep-Alive value
+			defaultHeaders()
+
+				sets some default headers to use for requests, these can be edited and added to.
 		*/
-		public function getKeepAlive()
+		public function defaultHeaders()
 		{
-			return $this->keepalive;
+			$this->addHeader("Connection: Keep-alive");
+			$this->addHeader("Keep-alive: 300");
+			$this->addHeader("Expect:");
+			$this->addHeader("User-Agent: " . $this->randomAgent());
 		}
+
+		/*
+			addHeader($header)
+
+				checks if $header already exists in the headers array, if not it adds it.
+		*/
+		public function addHeader($header)
+		{
+			if($this->checkHeader($header))
+			{
+				if($this->verbose)
+					print "This header is already set. Try deleting it then resetting it.\n";
+				return false;
+			}
+			$this->headers[] = $header;
+		}
+
+		/*
+			checkHeader($header)
+
+				checks if $header already exists in the headers array.
+		*/
+		public function checkHeader($header)
+		{
+			foreach($this->headers as $i => $head)
+				if(substr($head, 0, strlen($header)-1) == $header)
+					return true;
+
+			return false;
+		}
+
+		/*
+			delHeader($header)
+
+				checks for $header in $this->headers and deletes it if it exists.
+		*/
+		public function delHeader($header)
+		{
+			if($this->checkHeader($header))
+			{
+				unset($this->headers[$i]);
+				$this->headers = array_values($this->headers);
+			}
+			
+		}
+
+		/*
+			getHeaders()
+
+				returns a list of the currently set headers
+		*/
+		public function getHeaders()
+		{
+			return $this->headers;
+		}
+
+		
 
 		/*
 			setProxy($py, $type, $creds, $ch)
@@ -114,21 +176,6 @@
 		}
 
 		/*
-			setVerbose($mode)
-
-				turns on and off class verbosity. It can take a boolean value directly
-				or if called without any parameters, it will simply invert its current value.
-		*/
-
-		public function setVerbose($mode = null)
-		{
-			if($mode)
-				$this->verbose = $mode;
-			else
-				$this->verbose = !$this->verbose;
-		}
-
-		/*
 			getProxy()
 			
 				returns an array with the currently set proxy, credentials, and its type.
@@ -161,34 +208,16 @@
 			return $this->cookies;
 		}
 
-		/*
-			setAgent($agent)
-			
-				sets the User-Agent to $agent
-		*/
-		public function setAgent($agent='curlBot')
-		{
-			$this->agent = $agent;
-		}
 
-		/*
-			getAgent()
-			
-				returns the currently set User-Agent
-		*/
-		public function getAgent()
-		{
-			return $this->agent;
-		}
 
 		/*
 			setRandomAgent()
 			
-				sets the useragent at random to one from the list below
+				returns a useragent at random to one from the list below
 					
 			List of user-agents from: https://techblog.willshouse.com/2012/01/03/most-common-user-agents/
 		*/
-		public function setRandomAgent()
+		public function randomAgent()
 		{
 			$agents = array("Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2272.118 Safari/537.36",
 					"Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.90 Safari/537.36",
@@ -266,7 +295,7 @@
 					"Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2272.118 Safari/537.36 OPR/28.0.1750.51",
 					"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2272.89 Safari/537.36");
 			
-			$this->setAgent($agents[rand(0,count($agents)-1)]);
+			return $agents[rand(0,count($agents)-1)];
 
 		}
 
@@ -287,7 +316,7 @@
 			popURL()
 
 				returns the top URL from the $this->urls stack or null
-				on error
+				on error. Removes that item from the array.
 		*/
 		public function popURL()
 		{
@@ -301,6 +330,22 @@
 			if($this->verbose)
 				print "No URLs to pop.\n";
 			return null;
+		}
+
+		/*
+			peekURL()
+
+				returns the top URL from the $this->urls stack or null
+				on error
+		*/
+		public function peekURL()
+		{
+			if($this->urlCount() > 0)
+				return end($this->urls);
+			if($this->verbose)
+				print "No URLs to peek.\n";
+			return null;
+
 		}
 
 		/*
@@ -357,16 +402,11 @@
 			
 			if($ref == '')
 				$ref = $url;
-			$hd = array("Connection: Keep-alive",
-				    "Keep-alive: {$this->keepalive}",
-				    "Expect:",
-				    "Referer: $ref",
-				    "User-Agent: {$this->agent}"
-				);
-			
+			$this->addHeader("Referer: $ref");
+						
 			curl_setopt($this->ch, CURLOPT_URL, $url);
 			curl_setopt($this->ch, CURLOPT_POST, 0);
-			curl_setopt($this->ch, CURLOPT_HTTPHEADER, $hd);
+			curl_setopt($this->ch, CURLOPT_HTTPHEADER, $this->headers);
 			$x = curl_exec($this->ch);
 
 			return $x;
@@ -393,17 +433,12 @@
 				}
 			if($ref == '')
 				$ref = $purl;
-			$hd = array("Connection: Keep-alive",
-				    "Keep-alive: {$this->keepalive}",
-				    "Expect:",
-				    "Referer: $ref",
-				    "User-Agent: {$this->agent}"
-				);
-			
+			$this->addHeader("Referer: $ref");
+						
 			curl_setopt($this->ch, CURLOPT_URL, $purl);
 			curl_setopt($this->ch, CURLOPT_POST, 1);
 			curl_setopt($this->ch, CURLOPT_POSTFIELDS, $pdata);
-			curl_setopt($this->ch, CURLOPT_HTTPHEADER, $hd);
+			curl_setopt($this->ch, CURLOPT_HTTPHEADER, $this->headers);
 			
 			$x = curl_exec($this->ch);
 
@@ -455,10 +490,14 @@
 	        { 
 	        	$url = $this->popURL();
 	        	$curl_array[$i] = $this->setupCURL();
+	        	if($this->checkHeader("Referer"))
+	        		$this->delHeader("Referer");
+	        	$this->addHeader("Referer: " . $url[0]);
 	        	
 	        	$curl_array[$i] = $this->setProxy($py['proxy'], $py['type'], $py['credentials'], $curl_array[$i]);
 	        	curl_setopt($curl_array[$i], CURLOPT_URL, $url[0]);
         		curl_setopt($curl_array[$i], CURLOPT_RETURNTRANSFER,1);
+        		curl_setopt($curl_array[$i], CURLOPT_HTTPHEADER, $this->headers);
         		curl_setopt($curl_array[$i], CURLOPT_POST, 0);
 	        	if(array_key_exists(1, $url) && $url[1] != null)
 	        	{
@@ -466,6 +505,7 @@
 					curl_setopt($curl_array[$i], CURLOPT_POSTFIELDS, $this->generatePOSTData($url[1]));
 	        	} 
 	            curl_multi_add_handle($mh, $curl_array[$i]); 
+	            $this->delHeader("Referer");
 	        } 
 	        $active = null; 
 	        do 
