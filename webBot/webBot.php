@@ -461,8 +461,6 @@
 	        do 
 	        { 
 	            $mrc = curl_multi_exec($mh, $active); 
-	            sleep(10); 
-	            
 	        } while($mrc == CURLM_CALL_MULTI_PERFORM); 
 	        
 	        while ($active && $mrc == CURLM_OK) 
