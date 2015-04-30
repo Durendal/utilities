@@ -27,7 +27,7 @@
 			
 			$this->setCookie($cookies);
 			$this->ch = $this->setupCURL();
-			$this->setProxy($proxy, $credentials, $type);
+			$this->ch = $this->setProxy($proxy, $type, $credentials);
 			$this->keepalive = 300;
 			$this->setRandomAgent();
 			$this->urls = array();
@@ -57,37 +57,41 @@
 		}
 
 		/*
-			setProxy($py, $creds, $type)
+			setProxy($py, $type, $creds, $ch)
 
 				will set the proxy using the specified credentials and type,
 				by default it assumes an HTTP proxy with no credentials. To 
 				use a SOCKS proxy simply pass the string 'SOCKS' as the third 
 				parameter. If no parameters are sent, it will remove any proxy
-				settings and begin routing in the clear.
+				settings and begin routing in the clear. The fourth parameter is
+				an optional curl handler to use instead of $this->ch, this decoupling
+				allows for the multi_thread_request() method to use it as well.
+
 		*/
-		public function setProxy($py = null, $creds = null, $type = 'HTTP')
+		public function setProxy($py = null, $type = 'HTTP', $creds = null, $ch = null)
 		{
 			$this->proxy = $py;
 			$this->credentials = $creds;
 			$this->proxtype = $type;
-
+			if(!$ch)
+				$ch = $this->ch;
 			if($py)
 			{
 				// Check for SOCKS or HTTP Proxy
 				if(strtoupper($this->proxtype) == 'SOCKS')
-					curl_setopt($this->ch, CURLOPT_PROXYTYPE, 7);
+					curl_setopt($ch, CURLOPT_PROXYTYPE, 7);
 				else
 					curl_setopt($this->ch, CURLOPT_PROXYTYPE, CURLPROXY_HTTP);
 
-				curl_setopt($this->ch, CURLOPT_HTTPPROXYTUNNEL, 1);
-				curl_setopt($this->ch, CURLOPT_PROXY, $this->proxy);
+				curl_setopt($ch, CURLOPT_HTTPPROXYTUNNEL, 1);
+				curl_setopt($ch, CURLOPT_PROXY, $this->proxy);
 				if($this->verbose)
 					print "Using {$this->proxtype} Proxy: {$this->proxy} ";
 				if($this->credentials)
 				{
 					if($this->verbose)
 						print "Credentials: {$this->credentials}";
-					curl_setopt($this->ch, CURLOPT_PROXYUSERPWD, $this->credentials);
+					curl_setopt($ch, CURLOPT_PROXYUSERPWD, $this->credentials);
 				}
 				if($this->verbose)
 					print "\n";
@@ -97,12 +101,13 @@
 			{
 				if($this->verbose)
 					print "Disabling Proxy.\n";
-				curl_setopt($this->ch, CURLOPT_PROXYTYPE, null);
-				curl_setopt($this->ch, CURLOPT_HTTPPROXYTUNNEL, 0);
-				curl_setopt($this->ch, CURLOPT_PROXY, null);
-				curl_setopt($this->ch, CURLOPT_PROXYUSERPWD, null);
+				curl_setopt($ch, CURLOPT_PROXYTYPE, null);
+				curl_setopt($ch, CURLOPT_HTTPPROXYTUNNEL, 0);
+				curl_setopt($ch, CURLOPT_PROXY, null);
+				curl_setopt($ch, CURLOPT_PROXYUSERPWD, null);
 			}
 
+			return $ch;
 		}
 
 		/*
@@ -403,6 +408,23 @@
 		}
 
 		/*
+			requestHTTP($type, $url, $ref, $pdata)
+
+				simple wrapper method for requestGET and requestPOST
+		*/
+		public function requestHTTP($type = "GET", $url = null, $ref = '', $pdata = null)
+		{
+			if($type == "GET")
+				return $this->requestGET($url, $ref);
+			else if($type == "POST")
+				return $this->requestPOST($url, $pdata, $ref);
+			
+			if($this->verbose)
+				print "Invalid Request type submitted.\n";
+			return null;
+		}
+
+		/*
 				multi_thread_request($nodes)
 
 					Accepts an array of URLs to scrape, each element in the array is a sub-array.
@@ -412,6 +434,8 @@
 		*/
 		function multi_thread_request($nodes = null)
 		{ 
+			$py = $this->getProxy();
+			
 			if($nodes == null)
 				$nodes = $this->urls;
 	        $mh = curl_multi_init();
@@ -421,6 +445,8 @@
 	        foreach($nodes as $i => $url) 
 	        { 
 	        	$curl_array[$i] = $this->setupCURL();
+	        	
+	        	$curl_array[$i] = $this->setProxy($py['proxy'], $py['type'], $py['credentials'], $curl_array[$i]);
 	        	curl_setopt($curl_array[$i], CURLOPT_URL, $url[0]);
         		curl_setopt($curl_array[$i], CURLOPT_RETURNTRANSFER,1);
         		curl_setopt($curl_array[$i], CURLOPT_POST, 0);
