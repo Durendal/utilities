@@ -26,12 +26,20 @@ if you then ran setProxy() with no parameters it would clear the proxy settings 
 	file_put_contents("index.html", $page);
 	// index.html is an empty file
 
+
 ===========
 ## Headers
 
-By default a random User-Agent is selected, this behaviour can be overridden by explicitly calling the setAgent() function and sending it the value you want:
+Headers can be completely customized, although the defaults are enough to make basic requests. These values can also be overridden, added to, or deleted at any time.
 
-	$bot->setAgent("myBot user-agent");
+Example:
+
+	if($bot->checkHeader("Keep-alive"))
+		$bot->delHeader("Keep-alive");
+	$bot->addHeader("Keep-alive: 300");
+	if($bot->checkHeader("User-Agent"))
+		$bot->delHeader("User-Agent");
+	$bot->addHeader("User-Agent: " . $bot->randomAgent());
 
 POST parameters should be sent as an array through generatePOSTData() which will ensure they are urlencoded and properly formatted:
 
@@ -42,10 +50,12 @@ POST parameters should be sent as an array through generatePOSTData() which will
 	else
 		print "Failed to log in\n";
 
-This class also comes packaged with a number of parsing routines written by Mike Schrenk for his book Webbots, Spiders and Screenscrapers that I have found extremely useful in the past. 
+
 
 ===========
 ## Parsing
+
+This class also comes packaged with a number of parsing routines written by Mike Schrenk for his book Webbots, Spiders and Screenscrapers that I have found extremely useful in the past. 
 
 Example:
 
@@ -65,10 +75,7 @@ Example:
 	}
 	
 
-This script takes an optional parameter of a subreddit name the default is 'talesfromtechsupport' 
-It will scrape the RSS feed and post the front page of posts. This should illustrate
-the basic principles of using the bot. All parsing methods were adapted from original
-code written by Mike Schrenk in his book 'Webbots spiders and Screenscrapers' 
+This script takes an optional parameter of a subreddit name the default is 'talesfromtechsupport' It will scrape the RSS feed and post the front page of posts. This should illustrate the basic principles of using the bot. All parsing methods were adapted from original code written by Mike Schrenk in his book 'Webbots spiders and Screenscrapers' 
 
 ===============
 ## curl_multi_*
