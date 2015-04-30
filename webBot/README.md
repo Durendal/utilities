@@ -71,7 +71,7 @@ Example:
 	$bot = new webBot("127.0.0.1:9050", "SOCKS");
 	$creds = array("username" => "Durendal", "password" => "abc&123", "submit" => "true");
 	$sites = array(array("http://www.google.com"), array("http://www.bing.com"), array("http://www.cnn.com"), array("http://zqktlwi4fecvo6ri.onion"), array("http://www.example.com/login.php", $creds));
-	$results = $bot->multi_thread_request($sites);
+	$results = $bot->curl_multi_request($sites);
 	
 	foreach($results as $key => $page)
 	{

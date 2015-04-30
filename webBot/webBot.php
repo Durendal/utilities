@@ -65,7 +65,7 @@
 				parameter. If no parameters are sent, it will remove any proxy
 				settings and begin routing in the clear. The fourth parameter is
 				an optional curl handler to use instead of $this->ch, this decoupling
-				allows for the multi_thread_request() method to use it as well.
+				allows for the curl_multi_request() method to use it as well.
 
 		*/
 		public function setProxy($py = null, $type = 'HTTP', $creds = null, $ch = null)
@@ -425,14 +425,14 @@
 		}
 
 		/*
-				multi_thread_request($nodes)
+				curl_multi_request($nodes)
 
 					Accepts an array of URLs to scrape, each element in the array is a sub-array.
 					For GET requests the sub-array needs only one element, the URL. For POST requests
 					the subarray should have a second element which is yet another array containing
 					POST parameters to be sent.
 		*/
-		function multi_thread_request($nodes = null)
+		function curl_multi_request($nodes = null)
 		{ 
 			$py = $this->getProxy();
 			
