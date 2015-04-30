@@ -79,3 +79,47 @@ Example:
 		print "Len: " . strlen($page) . "\n";
 		file_put_contents("$key.html", $page);
 	}
+
+===============
+## Stack based URL Queue
+
+You can optionally build a queue of URLs to scrape that acts as a FILO (First in last out) queue. This can work for individual or curl_multi_ requests, if its an individial request it will pop off the top URL and process it. If you run curl_multi it will process the entirety of the queue. In the future I may implement the option of selecting the number of urls to process. If there are items on the queue and you run requestGET(), requestPOST(), or requestHTTP() with an explicit url the queue will remain unaffected and the request will process normally.
+
+Example:
+
+	// Disable Proxy
+	$bot->setProxy();
+
+	$bot->pushURL("http://www.reddit.com/r/circlejerk/.rss");
+	$bot->pushURL("http://www.reddit.com/r/bitcoin/.rss");
+	$bot->pushURL("http://www.reddit.com/r/jobs4bitcoins/.rss");
+
+	// Pop the top URL from the stack and execute a request
+	$page = $bot->requestGET();
+
+	$posts = $bot->parse_array($page, "<item>", "</item>");
+	$titles = array();
+	$links = array();
+
+	for($i = 0; $i < count($posts); $i++)
+	{
+		$ii = $i+1;
+		$titles[$i] = $bot->return_between($posts[$i], "<title>", "</title>", 1);
+		$links[$i] = $bot->return_between($posts[$i], "<link>", "</link>", 1);
+		print "Title #$ii: ".$titles[$i]."\n";
+		print "Link #$ii: ".$links[$i]."\n";
+	}
+
+	// Check the stack size
+	print "URL Stack Size: " . $bot->urlCount() . "\n";
+
+	// Empty out the $bot->urls stack
+	$results = $bot->curl_multi_request();
+	
+	foreach($results as $key => $page)
+	{
+		// Make $key a little bit nicer for a filename
+		$key = substr(str_replace(array("http://", "https://", ".rss", "www.reddit.com/r/"), "", $key), 0, -1);
+		print $key . " Len: " . strlen($page) . "\n";
+		file_put_contents("$key.html", $page);
+	}
