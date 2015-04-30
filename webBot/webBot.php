@@ -105,6 +105,19 @@
 			}
 			
 		}
+		/*
+			changeHeader($header, $val)
+
+				deletes $header if it exists, then adds $val as a header.
+		*/
+		public function changeHeader($header, $val)
+		{
+			$this->delHeader($header);
+			if(strpos($val, $header))
+				$this->addHeader($val);
+			else
+				$this->addHeader($header.": ".$val);
+		}
 
 		/*
 			getHeaders()
