@@ -18,16 +18,20 @@
 		private $proxy;			// Proxy Address
 		private $proxtype;		// Proxy Type
 		private $credentials;	// Proxy Credentials
+		private $urls;			// Stack of URLs
+		private $verbose;		// Verbose output from class
 			
 
 		public function __construct($proxy = null, $type = 'HTTP', $credentials = null, $cookies = 'cookies.txt')
 		{
 			
 			$this->setCookie($cookies);
-			$this->setupCURL();
+			$this->ch = $this->setupCURL();
 			$this->setProxy($proxy, $credentials, $type);
 			$this->keepalive = 300;
 			$this->setRandomAgent();
+			$this->urls = array();
+			$verbose = true;
 			
 		}
 
@@ -41,6 +45,7 @@
 			if($keepalive > 0)
 				$this->keepalive = $keepalive;
 		}
+
 		/*
 			getKeepAlive()
 		
@@ -76,24 +81,43 @@
 
 				curl_setopt($this->ch, CURLOPT_HTTPPROXYTUNNEL, 1);
 				curl_setopt($this->ch, CURLOPT_PROXY, $this->proxy);
-				print "Using {$this->proxtype} Proxy: {$this->proxy} ";
+				if($this->verbose)
+					print "Using {$this->proxtype} Proxy: {$this->proxy} ";
 				if($this->credentials)
 				{
-					print "Credentials: {$this->credentials}";
+					if($this->verbose)
+						print "Credentials: {$this->credentials}";
 					curl_setopt($this->ch, CURLOPT_PROXYUSERPWD, $this->credentials);
 				}
-				print "\n";
+				if($this->verbose)
+					print "\n";
 			}
 			// Disable Proxy Support if called with no parameters
 			else
 			{
-				print "Disabling Proxy.\n";
+				if($this->verbose)
+					print "Disabling Proxy.\n";
 				curl_setopt($this->ch, CURLOPT_PROXYTYPE, null);
 				curl_setopt($this->ch, CURLOPT_HTTPPROXYTUNNEL, 0);
 				curl_setopt($this->ch, CURLOPT_PROXY, null);
 				curl_setopt($this->ch, CURLOPT_PROXYUSERPWD, null);
 			}
 
+		}
+
+		/*
+			setVerbose($mode)
+
+				turns on and off class verbosity. It can take a boolean value directly
+				or if called without any parameters, it will simply invert its current value.
+		*/
+
+		public function setVerbose($mode = null)
+		{
+			if($mode)
+				$this->verbose = $mode;
+			else
+				$this->verbose = !$this->verbose;
 		}
 
 		/*
@@ -144,7 +168,6 @@
 			
 				returns the currently set User-Agent
 		*/
-
 		public function getAgent()
 		{
 			return $this->agent;
@@ -240,6 +263,49 @@
 		}
 
 		/*
+			pushURL($url, $pdata)
+
+				Adds a URL to $this->urls stack. If it is a POST request, 
+				also send an array of the POST parameters
+		*/
+		public function pushURL($url, $pdata = null)
+		{
+			if($this->verbose)
+				print "Pushing $url onto list\n";
+			array_push($this->urls, array($url, $pdata));
+		}
+
+		/*
+			popURL()
+
+				returns the top URL from the $this->urls stack or null
+				on error
+		*/
+		public function popURL()
+		{
+			if(count($this->urls) > 0)
+			{
+				$url = array_pop($this->urls);
+				if($this->verbose)
+					print "Popping " . $url[1] . " from list\n";
+				return $url;
+			}
+			if($this->verbose)
+				print "No URLs to pop.\n";
+			return null;
+		}
+
+		/*
+			urlCount()
+
+				returns the current number of URLs in the $this->urls stack.
+		*/
+		public function urlCount()
+		{
+			return count($this->urls);
+		}
+
+		/*
 			setupCURL()
 			
 				Creates and returns a new generic cURL handler
@@ -247,13 +313,15 @@
 		private function setupCURL()
 		{
 			
-			$this->ch = curl_init();
-			curl_setopt($this->ch, CURLOPT_SSL_VERIFYPEER, false);
-			curl_setopt($this->ch, CURLOPT_RETURNTRANSFER, 1);
-			curl_setopt($this->ch, CURLOPT_FOLLOWLOCATION, 1);
-			curl_setopt($this->ch, CURLOPT_HEADER, 1);
-			curl_setopt($this->ch, CURLOPT_COOKIEJAR, $this->cookies);
-			curl_setopt($this->ch, CURLOPT_COOKIEFILE, $this->cookies);
+			$ch = curl_init();
+			curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+			curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+			curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
+			curl_setopt($ch, CURLOPT_HEADER, 1);
+			curl_setopt($ch, CURLOPT_COOKIEJAR, $this->cookies);
+			curl_setopt($ch, CURLOPT_COOKIEFILE, $this->cookies);
+
+			return $ch;
 		}
 
 		/*
@@ -263,8 +331,21 @@
 				if no $ref is specified it will use the $url
 		*/
 
-		public function requestGET($url, $ref='')
+		public function requestGET($url = null, $ref='')
 		{
+			if($url == null)
+				if(count($this->urls) > 0)
+				{
+
+					$url = $this->popURL();
+					$url = $url[0][0];
+				}
+				else
+				{
+					print "No URLs currently in stack\n";
+					return 0;
+				}
+			
 			if($ref == '')
 				$ref = $url;
 			$hd = array("Connection: Keep-alive",
@@ -290,8 +371,16 @@
 				and the parameters specified in $pdata. If no $ref is specified it will use the $url
 		*/
 
-		public function requestPOST($purl, $pdata, $ref='')
+		public function requestPOST($purl = null, $pdata, $ref='')
 		{
+			if($purl == null)
+				if(count($this->urls) > 0)
+					$purl = $this->popURL();
+				else
+				{
+					print "No URLs currently in stack\n";
+					return 0;
+				}
 			if($ref == '')
 				$ref = $purl;
 			$hd = array("Connection: Keep-alive",
@@ -312,6 +401,71 @@
 
 			return $x;
 		}
+
+		/*
+				multi_thread_request($nodes)
+
+					Accepts an array of URLs to scrape, each element in the array is a sub-array.
+					For GET requests the sub-array needs only one element, the URL. For POST requests
+					the subarray should have a second element which is yet another array containing
+					POST parameters to be sent.
+		*/
+		function multi_thread_request($nodes = null)
+		{ 
+			if($nodes == null)
+				$nodes = $this->urls;
+	        $mh = curl_multi_init();
+
+	        $curl_array = array(); 
+
+	        foreach($nodes as $i => $url) 
+	        { 
+	        	$curl_array[$i] = $this->setupCURL();
+	        	curl_setopt($curl_array[$i], CURLOPT_URL, $url[0]);
+        		curl_setopt($curl_array[$i], CURLOPT_RETURNTRANSFER,1);
+        		curl_setopt($curl_array[$i], CURLOPT_POST, 0);
+	        	if(array_key_exists(1, $url))
+	        	{
+	        		curl_setopt($curl_array[$i], CURLOPT_POST, 1);
+					curl_setopt($curl_array[$i], CURLOPT_POSTFIELDS, $this->generatePOSTData($url[1]));
+	        	} 
+	            curl_multi_add_handle($mh, $curl_array[$i]); 
+	        } 
+	        $active = null; 
+	        do 
+	        { 
+	            $mrc = curl_multi_exec($mh, $active); 
+	            sleep(10); 
+	            
+	        } while($mrc == CURLM_CALL_MULTI_PERFORM); 
+	        
+	        while ($active && $mrc == CURLM_OK) 
+	        {
+           		do 
+           		{
+               		$mrc = curl_multi_exec($mh, $active);
+           		} while ($mrc == CURLM_CALL_MULTI_PERFORM);
+
+    		}
+    		if ($mrc != CURLM_OK)
+      			trigger_error("Curl multi read error $execReturnValue\n", E_USER_WARNING);
+    	
+	        $res = array(); 
+	        foreach($nodes as $i => $url) 
+	        {
+	        	$curlError = curl_error($curl_array[$i]);
+      			if($curlError == "")
+	            	$res[$url[0]] = curl_multi_getcontent($curl_array[$i]); 
+	            else
+	            	if($this->verbose)
+	            		print "Curl error on handle $url: $curlError\n";
+	            curl_multi_remove_handle($mh, $curl_array[$i]); 
+	        }
+	        
+	        curl_multi_close($mh);        
+	        $this->urls = array();
+	        return $res; 
+		} 
 
 		/*
 			generatePOSTData($data)
