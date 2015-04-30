@@ -105,6 +105,9 @@
 				curl_setopt($ch, CURLOPT_HTTPPROXYTUNNEL, 0);
 				curl_setopt($ch, CURLOPT_PROXY, null);
 				curl_setopt($ch, CURLOPT_PROXYUSERPWD, null);
+				$this->proxy = null;
+				$this->proxtype = 'HTTP';
+				$this->credentials = null;
 			}
 
 			return $ch;
@@ -343,7 +346,7 @@
 				{
 
 					$url = $this->popURL();
-					$url = $url[0][0];
+					$url = $url[0];
 				}
 				else
 				{
@@ -450,9 +453,10 @@
 	        	curl_setopt($curl_array[$i], CURLOPT_URL, $url[0]);
         		curl_setopt($curl_array[$i], CURLOPT_RETURNTRANSFER,1);
         		curl_setopt($curl_array[$i], CURLOPT_POST, 0);
-	        	if(array_key_exists(1, $url))
+	        	if(array_key_exists(1, $url) && $url[1] != null)
 	        	{
 	        		curl_setopt($curl_array[$i], CURLOPT_POST, 1);
+	        		var_dump($url[1]);
 					curl_setopt($curl_array[$i], CURLOPT_POSTFIELDS, $this->generatePOSTData($url[1]));
 	        	} 
 	            curl_multi_add_handle($mh, $curl_array[$i]); 
