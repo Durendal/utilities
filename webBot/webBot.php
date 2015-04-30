@@ -291,11 +291,11 @@
 		*/
 		public function popURL()
 		{
-			if(count($this->urls) > 0)
+			if($this->urlCount() > 0)
 			{
 				$url = array_pop($this->urls);
 				if($this->verbose)
-					print "Popping " . $url[1] . " from list\n";
+					print "Popping " . $url[0] . " from list\n";
 				return $url;
 			}
 			if($this->verbose)
@@ -342,7 +342,7 @@
 		public function requestGET($url = null, $ref='')
 		{
 			if($url == null)
-				if(count($this->urls) > 0)
+				if($this->urlCount() > 0)
 				{
 
 					$url = $this->popURL();
@@ -350,7 +350,8 @@
 				}
 				else
 				{
-					print "No URLs currently in stack\n";
+					if($this->verbose)
+						print "No URLs currently in stack\n";
 					return 0;
 				}
 			
@@ -382,11 +383,12 @@
 		public function requestPOST($purl = null, $pdata, $ref='')
 		{
 			if($purl == null)
-				if(count($this->urls) > 0)
+				if($this->urlCount() > 0)
 					$purl = $this->popURL();
 				else
 				{
-					print "No URLs currently in stack\n";
+					if($this->verbose)
+						print "No URLs currently in stack\n";
 					return 0;
 				}
 			if($ref == '')
@@ -419,7 +421,7 @@
 		{
 			if($type == "GET")
 				return $this->requestGET($url, $ref);
-			else if($type == "POST")
+			else if($type == "POST" && $pdata != null)
 				return $this->requestPOST($url, $pdata, $ref);
 			
 			if($this->verbose)
@@ -439,14 +441,19 @@
 		{ 
 			$py = $this->getProxy();
 			
-			if($nodes == null)
+			if($nodes != null)
+				$this->urls = $nodes;
+			else
 				$nodes = $this->urls;
+
 	        $mh = curl_multi_init();
 
 	        $curl_array = array(); 
 
-	        foreach($nodes as $i => $url) 
+	        //foreach($nodes as $i => $url) 
+	        for($i = 0; $i < $this->urlCount(); $i++)
 	        { 
+	        	$url = $this->popURL();
 	        	$curl_array[$i] = $this->setupCURL();
 	        	
 	        	$curl_array[$i] = $this->setProxy($py['proxy'], $py['type'], $py['credentials'], $curl_array[$i]);
@@ -477,10 +484,12 @@
     		}
     		if ($mrc != CURLM_OK)
       			trigger_error("Curl multi read error $execReturnValue\n", E_USER_WARNING);
-    	
+    		$nodes = $this->urls;
 	        $res = array(); 
+	      
 	        foreach($nodes as $i => $url) 
 	        {
+
 	        	$curlError = curl_error($curl_array[$i]);
       			if($curlError == "")
 	            	$res[$url[0]] = curl_multi_getcontent($curl_array[$i]); 
