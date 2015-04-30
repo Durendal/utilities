@@ -535,7 +535,7 @@
 
     		}
     		if ($mrc != CURLM_OK)
-      			trigger_error("Curl multi read error $execReturnValue\n", E_USER_WARNING);
+      			trigger_error("Curl multi read error $mrc\n", E_USER_WARNING);
     		$nodes = $this->urls;
 	        $res = array(); 
 	      
