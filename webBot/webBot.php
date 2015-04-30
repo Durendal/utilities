@@ -463,7 +463,6 @@
 	        	if(array_key_exists(1, $url) && $url[1] != null)
 	        	{
 	        		curl_setopt($curl_array[$i], CURLOPT_POST, 1);
-	        		var_dump($url[1]);
 					curl_setopt($curl_array[$i], CURLOPT_POSTFIELDS, $this->generatePOSTData($url[1]));
 	        	} 
 	            curl_multi_add_handle($mh, $curl_array[$i]); 
